@@ -62,14 +62,17 @@ cpdef dict get_best_split(double[:, ::1] data):
 cdef dict recurse_tree(dict node)
 '''
 
+cdef double[:, ::1] bootstrap_data(double[:, ::1] data):
+    return data[np.random.choice(data.shape[0], data.shape[0])]
+
 # labels have to be last column
-cdef create_tree(double[:, ::1] data, int bootstrap_size)
+cdef create_tree(double[:, ::1] data, int bootstrap_size, int max_x)
     cdef:
         list bagged_trees = []
         dict tree
         size_t i
 
-    for i in range(bootstrap_size):
-        cdef dict root_node = get_best_split(data)
+    for i in range(bootstrap_size):        
+        cdef dict root_node = get_best_split(bootstrap_data(data))
         tree = recurse_tree(root_node)
         bagged_trees.append(tree)
