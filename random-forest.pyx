@@ -24,8 +24,9 @@ cdef add_endnode(dict node, bool left, bool right):
         node['right_node'] = {'end_node': True, 'y_hat': most_common_class}
         del node['right']
 
-#@cython.boundscheck(False)
+
 #@cython.wraparound(False)
+@cython.boundscheck(False)
 @cython.cdivision(True)
 cpdef double gini_index(ndarray[float64_t, ndim=2] left, ndarray[float64_t, ndim=2] right):
     cdef:
