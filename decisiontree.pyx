@@ -7,14 +7,13 @@ from numpy cimport ndarray, float64_t, int_t
 #@cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cpdef double gini_index(ndarray[float64_t, ndim=2] left, ndarray[float64_t, ndim=2] right):
+cpdef double gini_index(double[:, ::1] left, double[:, ::1] right):
     cdef:
         double purity = 0.0
-        ndarray[float64_t, ndim=2] split
-        ndarray[int_t, ndim=1] class_counts
-        ndarray[int_t, ndim=1] unique_classes
+        double[:, ::1] split
+        int[:] class_counts, unique_classes
         double class_ratio
-        int total_classes, i, bi
+        int total_classes, bi, i
 
     for bi in range(2):
         if bi == 0:
@@ -34,9 +33,9 @@ cpdef double gini_index(ndarray[float64_t, ndim=2] left, ndarray[float64_t, ndim
 #@cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cpdef dict get_best_split(ndarray[float64_t, ndim=2] data):
+cpdef dict get_best_split(double[:, ::1] data):
     cdef:
-        ndarray[float64_t, ndim=2] left, right, b_left, b_right
+        double[:, ::1]] left, right, b_left, b_right
         double split_point, b_split_point, gini, b_gini = 999.9
         int b_predictor, pred_i, row_i
     
