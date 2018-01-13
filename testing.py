@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from decisiontree import gini_index, get_best_split
+from decisiontree import gini_index, get_best_split, create_tree
 from datetime import datetime
 
 # test gini_index
@@ -18,4 +18,5 @@ for i in range(256):
     split_data = get_best_split(df.as_matrix())
 print(datetime.now())
 
-# test ...
+# test create_tree / recurse_tree
+cret

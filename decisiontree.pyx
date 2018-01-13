@@ -1,14 +1,27 @@
+# distutils: language = c++
+
 import numpy as np
 cimport numpy as np
 cimport cython
 from numpy cimport ndarray, float64_t, int_t
-from cython.parallel import prange
+from libcpp cimport bool
 
-cdef double[:, ::1] bootstrap_data(double[:, ::1] data):
-    return data[np.random.choice(data.shape[0], data.shape[0])]
+cdef ndarray[float64_t, ndim=2] bootstrap_data(ndarray[float64_t, ndim=2] data):
+    return data[np.random.choice(data.shape[0], data.shape[0]), :]
 
 cdef bool is_pure(double[:] Y):
     return np.unique(Y).size == 1
+
+cdef add_endnode(dict node, bool left, bool right):
+    cdef int most_common_class
+    if left:
+        most_common_class = np.bincount(node.left[:, -1]).argmax()
+        node['left_node'] = {'end_node': True, 'y_hat': most_common_class}
+        del node['left']
+    if right:
+        most_common_class = np.bincount(node.right[:, -1]).argmax()
+        node['right_node'] = {'end_node': True, 'y_hat': most_common_class}
+        del node['right']
 
 #@cython.boundscheck(False)
 @cython.wraparound(False)
@@ -36,12 +49,13 @@ cpdef double gini_index(double[:, ::1] left, double[:, ::1] right):
     
     return purity
 
+
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cpdef dict get_best_split(double[:, ::1] data):
+cpdef dict get_best_split(ndarray[float64_t, ndim=2] data):
     cdef:
-        double[:, ::1] left, right, b_left, b_right
+        ndarray[float64_t, ndim=2] left, right, b_left, b_right
         double split_point, b_split_point, gini, b_gini = 999.9
         int b_predictor, pred_i, row_i
     
@@ -69,17 +83,12 @@ cdef dict recurse_tree(dict node, int depth, int max_depth, int max_x):
     
     # check branch depth
     if depth >= max_depth:
-        most_common_class = np.bincount(node.left[:, -1]).argmax()
-        node['left_node'] = {'end_node': True, 'y_hat': most_common_class}
-
-        most_common_class = np.bincount(node.right[:, -1]).argmax()
-        node['right_node'] = {'end_node': True, 'y_hat': most_common_class}
+        add_endnode(node, left=True, right=True)
         return
     
     # check max_x & convergence
-    if node.left.shape[0] <= max_x or is_pure(node.left[:, -1]):
-        most_common_class = np.bincount(node.left[:, -1]).argmax()
-        node['left_node'] = {'end_node': True, 'y_hat': most_common_class}
+    if node.left.shape[0] <= max_x or is_pure(node.left[:, -1]) == 1:
+        add_endnode(node, left=True, right=False)
         return
     else:
         left_node = get_best_split(node.left)
@@ -88,9 +97,8 @@ cdef dict recurse_tree(dict node, int depth, int max_depth, int max_x):
         recurse_tree(node['left_node'], depth+1, max_depth, max_x)
 
 
-    if node.right.shape[0] <= max_x or is_pure(node.right[:, -1]):
-        most_common_class = np.bincount(node.right[:, -1]).argmax()
-        node['right_node'] = {'end_node': True, 'y_hat': most_common_class}
+    if node.right.shape[0] <= max_x or is_pure(node.right[:, -1]) == 1:
+        add_endnode(node, right=True, left=False)
         return
     else:
         right_node = get_best_split(node.right)
@@ -103,13 +111,15 @@ cdef dict recurse_tree(dict node, int depth, int max_depth, int max_x):
 
 
 # labels have to be last column
-cdef create_tree(double[:, ::1] data, int bootstrap_size, int max_depth, int max_x)
+cpdef create_tree(double[:, ::1] data, int bootstrap_size, int max_depth, int max_x):
     cdef:
         list bagged_trees = []
-        dict tree
+        dict tree, root_node
         size_t i
 
     for i in range(bootstrap_size):        
-        cdef dict root_node = get_best_split(bootstrap_data(data))
+        root_node = get_best_split(bootstrap_data(data))
         tree = recurse_tree(root_node, 1, max_depth, max_x)
         bagged_trees.append(tree)
+    
+    return bagged_trees
