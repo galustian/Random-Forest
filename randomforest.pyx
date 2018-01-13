@@ -30,7 +30,7 @@ cdef class RandomForest:
             size_t i
 
         for i in range(data.shape[0]):
-            prediction = self.get_random_forest_prediction(data[i, :]) # optimieze!!!
+            prediction = self.get_random_forest_prediction(data[i])
             predictions = np.append(predictions, prediction)
 
         return predictions
