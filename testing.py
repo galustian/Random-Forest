@@ -10,11 +10,12 @@ print(gini_index(np.array([[1.5, 2.1, 3.8, 2.0], [2.0, 4.0, 4.0, 2.0], [3.0, 6.0
 df = pd.read_csv('iris-test.csv', header=None)
 df = df.sample(frac=1, axis=0)
 df.iloc[:, -1] = df.iloc[:, -1].map({'Iris-setosa': 0, 'Iris-versicolor': 1, 'Iris-virginica': 2})
-df_matrix = df.as_matrix()
-split_data = get_best_split(df_matrix)
-'''print(datetime.now())
+split_data = get_best_split(df.as_matrix())
+print(split_data)
+
+print(datetime.now())
 for i in range(256):
-    split_data = get_best_split(df_matrix)
-print(datetime.now())'''
+    split_data = get_best_split(df.as_matrix())
+print(datetime.now())
 
 # test ...

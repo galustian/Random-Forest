@@ -35,7 +35,7 @@ cpdef double gini_index(double[:, ::1] left, double[:, ::1] right):
 @cython.cdivision(True)
 cpdef dict get_best_split(double[:, ::1] data):
     cdef:
-        double[:, ::1]] left, right, b_left, b_right
+        double[:, ::1] left, right, b_left, b_right
         double split_point, b_split_point, gini, b_gini = 999.9
         int b_predictor, pred_i, row_i
     
@@ -62,7 +62,7 @@ cdef recurse_tree(dict node)
 '''
 
 # labels have to be last column
-cdef create_tree(ndarray[float64_t, ndim=2] data, int bootstrap_size)
+cdef create_tree(double[:, ::1] data, int bootstrap_size)
     cdef dict root_node = get_best_split(data)
 
     recurse_tree(root_node['left_node'])
