@@ -1,6 +1,7 @@
 import numpy as np
 cimport numpy as np
 cimport cython
+from cython.parallel import prange
 from numpy cimport ndarray, float64_t, int_t
 
 
@@ -30,7 +31,7 @@ cpdef double gini_index(double[:, ::1] left, double[:, ::1] right):
     
     return purity
 
-#@cython.boundscheck(False)
+@cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
 cpdef dict get_best_split(double[:, ::1] data):
