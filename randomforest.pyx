@@ -7,6 +7,47 @@ from numpy cimport ndarray, float64_t, int_t
 from libcpp cimport bool
 from libc.math cimport ceil, sqrt
 
+
+cdef int predict_recursive(node, data_row):
+    if 'end_node' in node:
+        return node['y_hat']
+
+    if data_row[node['predictor']] < node['split_point']:
+        return predict_recursive(node['left_node'], data_row)
+    else:
+        return predict_recursive(node['right_node'], data_row)
+
+cdef class RandomForest:
+    cdef list random_forest
+
+    def __cinit__(self, list random_forest):
+        self.random_forest = random_forest
+
+    cpdef ndarray[int_t] predict(self, ndarray[float64_t, ndim=2] data):
+        cdef:
+            ndarray[int_t] predictions = np.array([], dtype=np.int)
+            int prediction
+            size_t i
+
+        for i in range(data.shape[0]):
+            prediction = self.get_random_forest_prediction(data[i, :]) # optimieze!!!
+            predictions = np.append(predictions, prediction)
+
+        return predictions
+
+    cdef int get_random_forest_prediction(self, data_row):
+        cdef ndarray[int_t] predictions = np.array([], dtype=np.int)
+
+        for tree in self.random_forest:
+            y_hat = predict_recursive(tree, data_row)
+            predictions = np.append(predictions, y_hat)
+        
+        return np.bincount(predictions).argmax()
+
+
+'''-------------------------------------------------------------------------------------------------------'''
+
+
 cdef ndarray[float64_t, ndim=2] get_bootstrap(ndarray[float64_t, ndim=2] data):
     return data[np.random.choice(data.shape[0], data.shape[0]), :]
 
@@ -96,8 +137,6 @@ cdef dict recurse_tree(dict node, int depth, int max_depth, int max_x):
             return node
         return
 
-
-
     # CHECK branch depth
     if depth >= max_depth:
         add_endnode(node, left=True, right=True)
@@ -126,15 +165,15 @@ cdef dict recurse_tree(dict node, int depth, int max_depth, int max_x):
 
 
 # labels have to be last column
-cpdef create_tree(ndarray[float64_t, ndim=2] data, int n_trees, int max_depth, int max_x):
+cpdef create_forest(ndarray[float64_t, ndim=2] data, int n_trees, int max_depth, int max_x):
     cdef:
-        list bagged_trees = []
+        list random_forest = []
         dict tree, root_node
         size_t i
 
     for i in range(n_trees):        
         root_node = get_best_split(get_bootstrap(data))
         tree = recurse_tree(root_node, 1, max_depth, max_x)
-        bagged_trees.append(tree)
+        random_forest.append(tree)
     
-    return bagged_trees
+    return RandomForest(random_forest)

@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from decisiontree import gini_index, get_best_split, create_tree
+from randomforest import gini_index, get_best_split, create_forest
 from datetime import datetime
 
 # test gini_index
@@ -19,4 +19,15 @@ for i in range(25):
 print(datetime.now())
 
 # test create_tree / recurse_tree
-print(create_tree(df.as_matrix(), n_trees=2, max_depth=3, max_x=5))
+#print(create_tree(df.as_matrix(), n_trees=2, max_depth=3, max_x=5))
+train_data, test_data = df.iloc[:100], df.iloc[100:]
+random_forest = create_forest(train_data.as_matrix(), n_trees=550, max_depth=5, max_x=3)
+predictions = random_forest.predict(test_data.as_matrix())
+
+correct = 0
+for i in range(len(predictions)):
+    if predictions[i] == test_data.iloc[i, -1]:
+        correct += 1
+    
+print(predictions)
+print("Ratio Correct:", correct / len(predictions))
