@@ -53,20 +53,17 @@ cpdef dict get_best_split(ndarray[float64_t, ndim=2] data):
                 b_gini, b_split_point, b_predictor = gini, split_point, pred_i
                 b_left, b_right = left.copy(), right.copy()
 
+    # TODO add proportional gini change for Variable-Importance measure
     return {'left': b_left, 'right': b_right, 'split_point': b_split_point, 'predictor': b_predictor, 'gini': b_gini}
 
 
-''''
-cdef recurse_tree(dict node)
-
-cdef create_tree(ndarray X, ndarray Y)
-    cdef dict split = get_best_split(X, Y)
-    cdef dict root_node = {
-        'gini': split['g_idx'],
-        'left_node': {'data': split['left']}
-        'right_node': {'data': split['left']}
-    }
-
-recurse_tree(root_node['left_node'])
-recurse_tree(root_node['right_node'])
 '''
+# 
+cdef recurse_tree(dict node)
+'''
+
+# labels have to be last column
+cdef create_tree(ndarray[float64_t, ndim=2] data, int bootstrap_size)
+    cdef dict root_node = get_best_split(data)
+
+    recurse_tree(root_node['left_node'])
