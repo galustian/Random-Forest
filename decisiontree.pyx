@@ -1,4 +1,4 @@
-# distutils: language = c++
+# distutils: language=c++
 
 import numpy as np
 cimport numpy as np
@@ -6,32 +6,33 @@ cimport cython
 from numpy cimport ndarray, float64_t, int_t
 from libcpp cimport bool
 
-cdef ndarray[float64_t, ndim=2] bootstrap_data(ndarray[float64_t, ndim=2] data):
+cdef ndarray[float64_t, ndim=2] get_bootstrap(ndarray[float64_t, ndim=2] data):
     return data[np.random.choice(data.shape[0], data.shape[0]), :]
 
-cdef bool is_pure(double[:] Y):
+cdef bool is_pure(ndarray[int_t, ndim=1] Y):
     return np.unique(Y).size == 1
 
 cdef add_endnode(dict node, bool left, bool right):
     cdef int most_common_class
+    print(node)
     if left:
-        most_common_class = np.bincount(node.left[:, -1]).argmax()
+        most_common_class = np.bincount(node['left'][:, -1].astype('int')).argmax()
         node['left_node'] = {'end_node': True, 'y_hat': most_common_class}
         del node['left']
     if right:
-        most_common_class = np.bincount(node.right[:, -1]).argmax()
+        most_common_class = np.bincount(node['right'][:, -1].astype('int')).argmax()
         node['right_node'] = {'end_node': True, 'y_hat': most_common_class}
         del node['right']
 
 #@cython.boundscheck(False)
-@cython.wraparound(False)
+#@cython.wraparound(False)
 @cython.cdivision(True)
-cpdef double gini_index(double[:, ::1] left, double[:, ::1] right):
+cpdef double gini_index(ndarray[float64_t, ndim=2] left, ndarray[float64_t, ndim=2] right):
     cdef:
         double purity = 0.0
         double class_ratio
-        double[:, ::1] split
-        int[:] class_counts, unique_classes
+        ndarray[float64_t, ndim=2] split
+        ndarray[int_t, ndim=1] class_counts, unique_classes
         int total_classes, bi, i
 
     for bi in range(2):
@@ -79,29 +80,39 @@ cpdef dict get_best_split(ndarray[float64_t, ndim=2] data):
 cdef dict recurse_tree(dict node, int depth, int max_depth, int max_x):
     cdef:
         dict left_node, right_node
-        int most_common_class
     
-    # check branch depth
+    # CHECK Zero-Node left or right => both have same class
+    if node['left'].shape[0] == 0 or node['right'].shape[0] == 0:
+        if node['left'].shape[0] == 0:
+            node['left'] = node['right']
+        else:
+            node['right'] = node['left']
+        add_endnode(node, left=True, right=True)
+        if depth == 1:
+            return node
+        return
+
+
+
+    # CHECK branch depth
     if depth >= max_depth:
         add_endnode(node, left=True, right=True)
         return
     
-    # check max_x & convergence
-    if node.left.shape[0] <= max_x or is_pure(node.left[:, -1]) == 1:
+    # CHECK max_x & convergence else: recurse further
+    if node['left'].shape[0] <= max_x or is_pure(node['left'][:, -1].astype('int')):
         add_endnode(node, left=True, right=False)
-        return
     else:
-        left_node = get_best_split(node.left)
+        left_node = get_best_split(node['left'])
         del node['left']
         node['left_node'] = left_node
         recurse_tree(node['left_node'], depth+1, max_depth, max_x)
 
 
-    if node.right.shape[0] <= max_x or is_pure(node.right[:, -1]) == 1:
+    if node['right'].shape[0] <= max_x or is_pure(node['right'][:, -1].astype('int')):
         add_endnode(node, right=True, left=False)
-        return
     else:
-        right_node = get_best_split(node.right)
+        right_node = get_best_split(node['right'])
         del node['right']
         node['right_node'] = right_node
         recurse_tree(node['right_node'], depth+1, max_depth, max_x)
@@ -111,14 +122,14 @@ cdef dict recurse_tree(dict node, int depth, int max_depth, int max_x):
 
 
 # labels have to be last column
-cpdef create_tree(double[:, ::1] data, int bootstrap_size, int max_depth, int max_x):
+cpdef create_tree(ndarray[float64_t, ndim=2] data, int n_trees, int max_depth, int max_x):
     cdef:
         list bagged_trees = []
         dict tree, root_node
         size_t i
 
-    for i in range(bootstrap_size):        
-        root_node = get_best_split(bootstrap_data(data))
+    for i in range(n_trees):        
+        root_node = get_best_split(get_bootstrap(data))
         tree = recurse_tree(root_node, 1, max_depth, max_x)
         bagged_trees.append(tree)
     

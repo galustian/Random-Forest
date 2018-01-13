@@ -14,9 +14,9 @@ split_data = get_best_split(df.as_matrix())
 print(split_data)
 
 print(datetime.now())
-for i in range(256):
+for i in range(25):
     split_data = get_best_split(df.as_matrix())
 print(datetime.now())
 
 # test create_tree / recurse_tree
-cret
+print(create_tree(df.as_matrix(), n_trees=1, max_depth=3, max_x=5))
