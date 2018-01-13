@@ -11,7 +11,7 @@ df = pd.read_csv('iris-test.csv', header=None)
 df = df.sample(frac=1, axis=0)
 df.iloc[:, -1] = df.iloc[:, -1].map({'Iris-setosa': 0, 'Iris-versicolor': 1, 'Iris-virginica': 2})
 split_data = get_best_split(df.as_matrix())
-print(split_data)
+#print(split_data)
 
 print(datetime.now())
 for i in range(25):
@@ -19,4 +19,4 @@ for i in range(25):
 print(datetime.now())
 
 # test create_tree / recurse_tree
-print(create_tree(df.as_matrix(), n_trees=1, max_depth=3, max_x=5))
+print(create_tree(df.as_matrix(), n_trees=2, max_depth=3, max_x=5))

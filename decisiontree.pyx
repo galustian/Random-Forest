@@ -5,6 +5,7 @@ cimport numpy as np
 cimport cython
 from numpy cimport ndarray, float64_t, int_t
 from libcpp cimport bool
+from libc.math cimport ceil, sqrt
 
 cdef ndarray[float64_t, ndim=2] get_bootstrap(ndarray[float64_t, ndim=2] data):
     return data[np.random.choice(data.shape[0], data.shape[0]), :]
@@ -14,7 +15,6 @@ cdef bool is_pure(ndarray[int_t, ndim=1] Y):
 
 cdef add_endnode(dict node, bool left, bool right):
     cdef int most_common_class
-    print(node)
     if left:
         most_common_class = np.bincount(node['left'][:, -1].astype('int')).argmax()
         node['left_node'] = {'end_node': True, 'y_hat': most_common_class}
@@ -58,19 +58,22 @@ cpdef dict get_best_split(ndarray[float64_t, ndim=2] data):
     cdef:
         ndarray[float64_t, ndim=2] left, right, b_left, b_right
         double split_point, b_split_point, gini, b_gini = 999.9
-        int b_predictor, pred_i, row_i
+        int b_predictor, pred_i, predictor, row_i
+        int num_random_predictors = <int>ceil(sqrt(data.shape[1]-1)) # size of random_predictors array
+        ndarray[int_t] random_predictors = np.random.choice(data.shape[1]-1, num_random_predictors, replace=False)
     
-    for pred_i in range(data.shape[1]-1): # -1 => last column is class
-        # split data for every predictor value (for every row), to a greater than and smaller dataset
+    for pred_i in range(random_predictors.shape[0]):
+        predictor = random_predictors[pred_i]
+        # Split data 1. For every predictor value => For every row, to get best left / right split
         for row_i in range(data.shape[0]):
-            split_point = data[row_i][pred_i]
-            left = data[data[:, pred_i] < split_point]
-            right = data[data[:, pred_i] >= split_point]
+            split_point = data[row_i][predictor]
+            left = data[data[:, predictor] < split_point]
+            right = data[data[:, predictor] >= split_point]
             
             gini = gini_index(left, right)
 
             if gini < b_gini:
-                b_gini, b_split_point, b_predictor = gini, split_point, pred_i
+                b_gini, b_split_point, b_predictor = gini, split_point, predictor
                 b_left, b_right = left.copy(), right.copy()
 
     # TODO add proportional gini change for Variable-Importance measure
