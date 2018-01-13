@@ -40,7 +40,7 @@ cpdef dict get_best_split(ndarray[float64_t, ndim=2] data):
         double split_point, b_split_point, gini, b_gini = 999.9
         int b_predictor, pred_i, row_i
     
-    for pred_i in range(data.shape[1]-1): # -1 => last column in class
+    for pred_i in range(data.shape[1]-1): # -1 => last column is class
         # split data for every predictor value (for every row), to a greater than and smaller dataset
         for row_i in range(data.shape[0]):
             split_point = data[row_i][pred_i]
