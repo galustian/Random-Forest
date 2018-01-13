@@ -2,4 +2,6 @@
 *.cpp
 *.c
 *.so
+.vscode/
+cython_debug/
 build/
