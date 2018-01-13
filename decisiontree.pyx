@@ -4,7 +4,7 @@ cimport cython
 from numpy cimport ndarray, float64_t, int_t
 
 
-@cython.boundscheck(False)
+#@cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
 cpdef double gini_index(ndarray[float64_t, ndim=2] left, ndarray[float64_t, ndim=2] right):
@@ -31,7 +31,7 @@ cpdef double gini_index(ndarray[float64_t, ndim=2] left, ndarray[float64_t, ndim
     
     return purity
 
-@cython.boundscheck(False)
+#@cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
 cpdef dict get_best_split(ndarray[float64_t, ndim=2] data):
