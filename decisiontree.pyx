@@ -1,8 +1,8 @@
 import numpy as np
 cimport numpy as np
 cimport cython
-from cython.parallel import prange
 from numpy cimport ndarray, float64_t, int_t
+from cython.parallel import prange
 
 
 #@cython.boundscheck(False)
@@ -59,11 +59,17 @@ cpdef dict get_best_split(double[:, ::1] data):
 
 '''
 # 
-cdef recurse_tree(dict node)
+cdef dict recurse_tree(dict node)
 '''
 
 # labels have to be last column
 cdef create_tree(double[:, ::1] data, int bootstrap_size)
-    cdef dict root_node = get_best_split(data)
+    cdef:
+        list bagged_trees = []
+        dict tree
+        size_t i
 
-    recurse_tree(root_node['left_node'])
+    for i in range(bootstrap_size):
+        cdef dict root_node = get_best_split(data)
+        tree = recurse_tree(root_node)
+        bagged_trees.append(tree)
