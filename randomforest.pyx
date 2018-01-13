@@ -102,7 +102,7 @@ cpdef dict get_best_split(ndarray[float64_t, ndim=2] data):
         double split_point, b_split_point, gini, b_gini = 999.9
         int b_predictor, pred_i, predictor, row_i
         int num_random_predictors = <int>ceil(sqrt(data.shape[1]-1)) # size of random_predictors array
-        ndarray[int_t] random_predictors = np.random.choice(data.shape[1]-1, num_random_predictors, replace=False)
+        ndarray[int_t, ndim=1] random_predictors = np.random.choice(data.shape[1]-1, num_random_predictors, replace=False)
     
     for pred_i in range(random_predictors.shape[0]):
         predictor = random_predictors[pred_i]
