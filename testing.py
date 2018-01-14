@@ -34,4 +34,4 @@ print(predictions)
 print("Ratio Correct:", correct / len(predictions))
 
 
-plotting.plot_decision_region(test_data, test_data[:, -1], model=random_forest)
+plotting.plot_decision_region(test_data[:, :-1], test_data[:, -1], model=random_forest)
