@@ -125,7 +125,7 @@ cpdef dict get_best_split(ndarray[float64_t, ndim=2] data):
 cdef dict recurse_tree(dict node, int depth, int max_depth, int max_x):
     cdef:
         dict left_node, right_node
-    
+
     # CHECK Zero-Node left or right => both have same class
     if node['left'].shape[0] == 0 or node['right'].shape[0] == 0:
         if node['left'].shape[0] == 0:
